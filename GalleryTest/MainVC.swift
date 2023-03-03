@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreImage
 
 class MainVC: UIViewController {
 
@@ -33,7 +32,7 @@ class MainVC: UIViewController {
     }()
     
     //кнопка для накладення ч/б ефекту
-    private let colorBtn: UIButton = {
+    private let filterBtn: UIButton = {
         let btn = UIButton(type: .system) //що означає type: .system для кнопки?
         btn.setTitle("Black & White".uppercased(), for: .normal)
         btn.titleLabel?.font = UIFont(name: "Roboto-Bold", size: 17)
@@ -80,10 +79,10 @@ class MainVC: UIViewController {
     }()
     
     //передаю вью контроллер для доступу до нього для зміни кольору зображення
-    private let imageVC: ImageVC = {
-        let vc = ImageVC()
-        return vc
-    }()
+//    private let imageVC: ImageVC = {
+//        let vc = ImageVC()
+//        return vc
+//    }()
     
     
     override func viewDidLoad() {
@@ -99,7 +98,8 @@ class MainVC: UIViewController {
     private func addTargets() {
         nextBtn.addTarget(self, action: #selector(nextAction), for: .touchUpInside)
         prevBtn.addTarget(self, action: #selector(prevAction), for: .touchUpInside)
-        colorBtn.addTarget(self, action: #selector(colorAction), for: .touchUpInside)
+        filterBtn.addTarget(self, action: #selector(changeFilterAction), for: .touchUpInside)
+        filterBtn.addTarget(self, action: #selector(disableFilterAction), for: .touchDownRepeat)
     }
     
     //функція що запускає функцію changeToNext() для кнопки next - прописана у pageVC
@@ -113,17 +113,11 @@ class MainVC: UIViewController {
         pageVC.changeToPrev() //доступаємось за рахунок того, що pageVC підпорядковується PageVC, який є UIPageViewController
     }
     
-    @objc func colorAction() {
-        let context = CIContext()
-        let filter = CIFilter(name:"CIColorControls")
-
-        //for i in ImageVC.catImageView.image {
-            let img = CIImage(image: imageVC.catImageView.image!)
-            filter?.setValue(img, forKey: kCIInputImageKey)
-            filter?.setValue(0.0, forKey: kCIInputSaturationKey)
-            let grayscaleCIImage = filter?.outputImage
-        let cgOutputImage = context.createCGImage(grayscaleCIImage!, from: img!.extent)
-       // }
+    @objc private func changeFilterAction() {
+        pageVC.changeFilter()
+    }
+    @objc private func disableFilterAction() {
+        pageVC.disableFilter()
     }
     
     private func addSubviews() {
@@ -132,7 +126,7 @@ class MainVC: UIViewController {
         view.addSubview(titleLbl)
         view.addSubview(prevBtn)
         view.addSubview(nextBtn)
-        view.addSubview(colorBtn)
+        view.addSubview(filterBtn)
         view.addSubview(pageControl)
     }
     
@@ -152,23 +146,23 @@ class MainVC: UIViewController {
         
         let prevBtnConstraints = [
             prevBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 45),
-            prevBtn.topAnchor.constraint(equalTo: pageVC.view.bottomAnchor, constant: 50),
+            prevBtn.topAnchor.constraint(equalTo: pageVC.view.bottomAnchor, constant: 60),
             prevBtn.heightAnchor.constraint(equalToConstant: 60),
-            prevBtn.widthAnchor.constraint(equalToConstant: 135)
+            prevBtn.widthAnchor.constraint(equalToConstant: 155)
         ]
         
         let nextBtnConstraints = [
             nextBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -45),
-            nextBtn.topAnchor.constraint(equalTo: pageVC.view.bottomAnchor, constant: 50),
+            nextBtn.topAnchor.constraint(equalTo: pageVC.view.bottomAnchor, constant: 60),
             nextBtn.heightAnchor.constraint(equalToConstant: 60),
-            nextBtn.widthAnchor.constraint(equalToConstant: 135)
+            nextBtn.widthAnchor.constraint(equalToConstant: 155)
         ]
         
-        let colorBtnConstraints = [
-            colorBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 45),
-            colorBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -45),
-            colorBtn.heightAnchor.constraint(equalToConstant: 60),
-            colorBtn.topAnchor.constraint(equalTo: nextBtn.bottomAnchor, constant: 40)
+        let filterBtnConstraints = [
+            filterBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 45),
+            filterBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -45),
+            filterBtn.heightAnchor.constraint(equalToConstant: 60),
+            filterBtn.topAnchor.constraint(equalTo: nextBtn.bottomAnchor, constant: 40)
         ]
         
         let pageControlConstraints = [
@@ -180,7 +174,7 @@ class MainVC: UIViewController {
         NSLayoutConstraint.activate(pageVCConstraints)
         NSLayoutConstraint.activate(prevBtnConstraints)
         NSLayoutConstraint.activate(nextBtnConstraints)
-        NSLayoutConstraint.activate(colorBtnConstraints)
+        NSLayoutConstraint.activate(filterBtnConstraints)
         NSLayoutConstraint.activate(pageControlConstraints)
     }
 

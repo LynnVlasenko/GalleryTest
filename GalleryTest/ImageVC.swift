@@ -13,9 +13,14 @@ protocol ImageIndexDelegate: AnyObject {
     func getImageIndex(index: Int)
 }
 
+protocol FilterDelegate: AnyObject {
+    func changeFilter()
+}
+
 class ImageVC: UIViewController {
 //створюємо делегат
     weak var imageDelegate: ImageIndexDelegate?
+    weak var filterDelegate: FilterDelegate?
     //знову створюємо лічильник індексів
     var index: Int = 0
     //передаємо зображення UIImageView - розміщуємо 1 картинку статично
@@ -36,20 +41,35 @@ class ImageVC: UIViewController {
         super.viewDidLoad()
         
         //передаємо картинки для catImageView.image за індексок - тобто відповідно який буде індекс - така буде відображатись картинка
-        self.catImageView.image = {
-            //можливо краще зробити через масив, хоча слайдери ж не безкінечні, по факту максимум 10 слайдів - більше вже тупо використовувати, то му може і через світч ок.
-            switch index {
-            case 0:
-                return UIImage(named: "cat1")
-            case 1:
-                return UIImage(named: "cat2")
-            case 2:
-                return UIImage(named: "cat3")
-            default:
-                return UIImage()
-            }
-        }()
+//        self.catImageView.image = {
+//            //можливо краще зробити через масив, хоча слайдери ж не безкінечні, по факту максимум 10 слайдів - більше вже тупо використовувати, то му може і через світч ок.
+//            switch index {
+//            case 0:
+//                return UIImage(named: "cat1")
+//            case 1:
+//                return UIImage(named: "cat2")
+//            case 2:
+//                return UIImage(named: "cat3")
+//            default:
+//                return UIImage()
+//            }
+//        }()
+        catImageView.image = UIImage(named: "cat\(index+1)")
         addSubviews()//в низу в окремій функції передаємо наш UI об'єкт на в'юшку
+    }
+    
+    func applyFilter() {
+        
+            let startImage = CIImage(image: UIImage(named: "cat\(index+1)")!)
+            let filter = CIFilter(name: "CIColorInvert")
+            filter?.setValue(startImage, forKey: kCIInputImageKey)
+            let newImage = UIImage(ciImage: (filter?.outputImage)!)
+            self.catImageView.image = newImage
+
+    }
+    
+    func disableFilter() {
+        catImageView.image = UIImage(named: "cat\(index+1)")
     }
     
     //це якісь стандартні функції
@@ -68,12 +88,18 @@ class ImageVC: UIViewController {
         
         let vc = ImageVC() //створюємо константу, що присвоює ImageVC - що є UIViewController
         vc.index = index //передає індекс
-        vc.imageDelegate = object //і для чогось кажемо що наш делегат є обєектом, який приймає ця функція
+        vc.imageDelegate = object //Тут ми підписуєм PageVC під делегат
         
         return vc
     }
     
     private func addSubviews() {
         view.addSubview(catImageView) //додаємо на вьюшку наш елемент catImageView
+    }
+}
+
+extension ImageVC: TestDelegate {
+    func testFunc() {
+        print("What was that?????")
     }
 }

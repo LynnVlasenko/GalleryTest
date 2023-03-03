@@ -6,20 +6,33 @@
 //
 
 import UIKit
+import CoreImage
 
 //створюємо протокол що приймає індекс сторінки що буде гортатися
 protocol PageControlDelegate: AnyObject {
     func changePage(to index: Int)
 }
 
+protocol TestDelegate: AnyObject {
+    func testFunc()
+}
+
+enum Filters: String {
+    case white = "CIColorInvert"
+    case black = "CIPixellate"
+}
+
 //створюємо UIPageViewController {
 class PageVC: UIPageViewController {
 
     weak var pageControlDelegate: PageControlDelegate? //створюємо делегат - по типу як я робила в MVP архітектурі
+    weak var testDelegate: TestDelegate?
     
     private var imagesVCs = [UIViewController]() //створюємо масив вью контроллерів - але передаємо в нього через функцію getInstance ImageVC
     
     var currentInx = 0 //поточний індекс картинки, яка видображається на слайдері
+    
+    var filterName = Filters.black
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,7 +69,18 @@ class PageVC: UIPageViewController {
             setViewControllers([imagesVCs[currentInx]], direction: .reverse, animated: true)
         }
     }
+    
+    func changeFilter() {
+        testDelegate?.testFunc()
 
+        guard let vc = imagesVCs[currentInx] as? ImageVC else { return }
+        vc.applyFilter()
+    }
+
+    func disableFilter() {
+        guard let vc = imagesVCs[currentInx] as? ImageVC else { return }
+        vc.disableFilter()
+    }
 }
 
 extension PageVC: ImageIndexDelegate {
