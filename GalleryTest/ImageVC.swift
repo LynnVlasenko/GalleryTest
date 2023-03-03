@@ -100,6 +100,6 @@ class ImageVC: UIViewController {
 
 extension ImageVC: TestDelegate {
     func testFunc() {
-        print("What was that?????")
+        print("?")
     }
 }
