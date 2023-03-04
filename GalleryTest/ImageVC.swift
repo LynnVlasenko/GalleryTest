@@ -8,25 +8,37 @@
 import UIKit
 import CoreImage
 
+//MARK: - ImageIndexDelegate protocol
 //протокол, що приймає індекс
 protocol ImageIndexDelegate: AnyObject {
+    // we use this method to track imageVCs' indexs in PageVC
     func getImageIndex(index: Int)
 }
 
-protocol FilterDelegate: AnyObject {
-    func changeFilter()
-}
-
+//MARK: - ImageVC
 class ImageVC: UIViewController {
 //створюємо делегат
+    
+    //MARK: - Delegates
     weak var imageDelegate: ImageIndexDelegate?
-    weak var filterDelegate: FilterDelegate?
+    
+    //MARK: - Index
     //знову створюємо лічильник індексів
+    // uses when creating instances to provide necessary images
     var index: Int = 0
+    
+    //MARK: - filter selector
+    // uses for change filters
+    var filterSelector = 0
+    
+    //MARK: - Context for filter
+    let context = CIContext()
+    
+    //MARK: - UI Objects
     //передаємо зображення UIImageView - розміщуємо 1 картинку статично
     let catImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "cat1")
+        //imageView.image = UIImage(named: "cat1")
         imageView.contentMode = .scaleAspectFill
         //чомусь не працює тінь для картинки. Виходить, що її не видно за вьюшкою в якій вона знаходиться. А зробити тінь для самої вьюшки не виходить - вона не приймає такі параметри.
         imageView.layer.shadowRadius = 5
@@ -39,6 +51,10 @@ class ImageVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        // configure image depending from setted index
+        catImageView.image = UIImage(named: "cat\(index)")
+        // add subviews
+        addSubviews() //в низу в окремій функції передаємо наш UI об'єкт на в'юшку
         
         //передаємо картинки для catImageView.image за індексок - тобто відповідно який буде індекс - така буде відображатись картинка
 //        self.catImageView.image = {
@@ -54,35 +70,57 @@ class ImageVC: UIViewController {
 //                return UIImage()
 //            }
 //        }()
-        catImageView.image = UIImage(named: "cat\(index+1)")
-        addSubviews()//в низу в окремій функції передаємо наш UI об'єкт на в'юшку
     }
     
+    //MARK: - Apply filter
     func applyFilter() {
         
-            let startImage = CIImage(image: UIImage(named: "cat\(index+1)")!)
+        let inputImage = CIImage(image: UIImage(named: "cat\(index)")!)
+        
+        if filterSelector == 0 {
+            let edgesFilter = CIFilter(name:"CIEdges")
+            edgesFilter?.setValue(inputImage, forKey: kCIInputImageKey)
+            edgesFilter?.setValue(0.9, forKey: kCIInputIntensityKey)
+            let edgesCIImage = edgesFilter?.outputImage
+            let cgOutputImage = context.createCGImage(edgesCIImage!, from: inputImage!.extent)
+            
+            catImageView.image = UIImage(cgImage: cgOutputImage!)
+            filterSelector += 1
+            
+        } else {
+            
             let filter = CIFilter(name: "CIColorInvert")
-            filter?.setValue(startImage, forKey: kCIInputImageKey)
-            let newImage = UIImage(ciImage: (filter?.outputImage)!)
-            self.catImageView.image = newImage
+            filter!.setValue(inputImage, forKey: kCIInputImageKey)
+            let grayscaleCIImage = filter?.outputImage
+            let cgOutputImage = context.createCGImage(grayscaleCIImage!, from: inputImage!.extent)
+            
+            catImageView.image = UIImage(cgImage: cgOutputImage!)
+            filterSelector -= 1
+        }
 
     }
     
+    //MARK: - Disable filter
     func disableFilter() {
-        catImageView.image = UIImage(named: "cat\(index+1)")
+        catImageView.image = UIImage(named: "cat\(index)")
     }
     
+    //MARK: - viewWillAppear
     //це якісь стандартні функції
     override func viewWillAppear(_ animated: Bool) { //Якщо true, вид додається до вікна за допомогою анімації.
         super.viewWillAppear(animated)
+        // compile when view is configured and going to be shown
+        // calls delegate method in PageVC because we conform it when creates instances
         imageDelegate?.getImageIndex(index: index) //передаємо для протоколу повернення індексу картинки сам індекс картинки
     }
     
+    //MARK: - viewDidLayoutSubviews
     override func viewDidLayoutSubviews() { //додаємо підвид для відображення картинок
         super.viewDidLayoutSubviews()
         catImageView.frame = view.bounds //фрейм на увесь вью - а саме вью де розміщується картинка описане в MainVC - створений елемент який підпорядкований PageVC - який є UIPageVC - і розмір його фрейма прописаний у констрейнтах - pageVCConstraints
     }
     
+    //MARK: - Get Instance
     //функція, що приймає індех і об'єкт і повертає ImageVC - за допомогою цієї функції в PageVC формуємо масив з зображеннями - imagesVCs
     static func getInstance(index: Int, object: ImageIndexDelegate) -> ImageVC { //чому тут static?
         
@@ -93,13 +131,8 @@ class ImageVC: UIViewController {
         return vc
     }
     
+    //MARK: - Add subviews
     private func addSubviews() {
         view.addSubview(catImageView) //додаємо на вьюшку наш елемент catImageView
-    }
-}
-
-extension ImageVC: TestDelegate {
-    func testFunc() {
-        print("?")
     }
 }

@@ -96,10 +96,18 @@ class MainVC: UIViewController {
     
     //функція, що додає дії для кнопок
     private func addTargets() {
+        // next action
         nextBtn.addTarget(self, action: #selector(nextAction), for: .touchUpInside)
+        // prev action
         prevBtn.addTarget(self, action: #selector(prevAction), for: .touchUpInside)
+        // apply filter action
         filterBtn.addTarget(self, action: #selector(changeFilterAction), for: .touchUpInside)
-        filterBtn.addTarget(self, action: #selector(disableFilterAction), for: .touchDownRepeat)
+        // create tap gesture recognizer to detect double taps
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(disableFilterAction))
+        // set required taps
+        doubleTap.numberOfTapsRequired = 2
+        // add gesture to filter btn
+        filterBtn.addGestureRecognizer(doubleTap)
     }
     
     //функція що запускає функцію changeToNext() для кнопки next - прописана у pageVC
